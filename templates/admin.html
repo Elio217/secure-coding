@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}관리자{% endblock %}
+{% block content %}
+  <section class="page-shell admin-shell">
+    <div class="page-heading">
+      <div><p class="eyebrow">ADMIN CONSOLE</p><h1>플랫폼 관리</h1><p>사용자·상품·신고·송금 상태를 확인하고 필요한 조치를 수행합니다.</p></div>
+    </div>
+    <div class="admin-stats">
+      <article><span>사용자</span><strong>{{ counts.users }}</strong></article>
+      <article><span>상품</span><strong>{{ counts.products }}</strong></article>
+      <article><span>미처리 신고</span><strong>{{ counts.reports }}</strong></article>
+      <article><span>송금</span><strong>{{ counts.transfers }}</strong></article>
+      <article><span>메시지</span><strong>{{ counts.messages }}</strong></article>
+    </div>
+
+    <section class="admin-section">
+      <div class="section-heading"><div><p class="eyebrow">REPORTS</p><h2>신고 관리</h2></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>상태</th><th>신고자</th><th>대상</th><th>사유</th><th>일시</th><th>조치</th></tr></thead>
+          <tbody>
+            {% for report in reports %}
+              <tr>
+                <td><span class="status status-{{ report.status }}">{{ report.status }}</span></td>
+                <td>{{ report.reporter_name }}</td>
+                <td>{{ report.target_type }} #{{ report.target_id }}</td>
+                <td class="wide-cell">{{ report.reason }}</td>
+                <td>{{ format_date(report.created_at) }}</td>
+                <td>
+                  {% if report.status == "open" %}
+                    <div class="admin-actions">
+                      <form action="/admin/reports/{{ report.id }}/resolve" method="post" data-confirm="현재 이용 제한을 유지하고 신고를 처리할까요?">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button class="table-action" type="submit">제한 유지</button>
+                      </form>
+                      <form action="/admin/reports/{{ report.id }}/restore" method="post" data-confirm="신고 대상을 복구하고 관련 신고를 처리할까요?">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button class="table-action" type="submit">복구</button>
+                      </form>
+                    </div>
+                  {% else %}—{% endif %}
+                </td>
+              </tr>
+            {% else %}<tr><td colspan="6">신고가 없습니다.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-section">
+      <div class="section-heading"><div><p class="eyebrow">USERS</p><h2>사용자 관리</h2></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>사용자</th><th>역할</th><th>상태</th><th>잔액</th><th>가입일</th><th>조치</th></tr></thead>
+          <tbody>
+            {% for user in users %}
+              <tr>
+                <td><a href="/users/{{ user.id }}">{{ user.display_name }}</a><small>@{{ user.username }}</small></td>
+                <td>{{ user.role }}</td>
+                <td><span class="status status-{{ user.status }}">{{ user.status }}</span></td>
+                <td>{{ format_money(user.balance) }}</td>
+                <td>{{ format_date(user.created_at) }}</td>
+                <td>
+                  {% if user.role != "admin" %}
+                    <div class="admin-actions">
+                      <form action="/admin/users/{{ user.id }}/{{ 'suspend' if user.status == 'active' else 'activate' }}" method="post" data-confirm="사용자 상태를 변경할까요?">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button class="table-action" type="submit">{{ "휴면 전환" if user.status == "active" else "활성화" }}</button>
+                      </form>
+                      <form class="balance-grant" action="/admin/users/{{ user.id }}/balance" method="post" data-confirm="입력한 가상 잔액을 지급할까요?">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input name="amount" type="number" min="1" max="1000000" placeholder="지급액" required>
+                        <button class="table-action" type="submit">지급</button>
+                      </form>
+                    </div>
+                  {% else %}—{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-section">
+      <div class="section-heading"><div><p class="eyebrow">PRODUCTS</p><h2>상품 관리</h2></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>상품</th><th>판매자</th><th>가격</th><th>상태</th><th>신고</th><th>조치</th></tr></thead>
+          <tbody>
+            {% for product in products %}
+              <tr>
+                <td><a href="/products/{{ product.id }}">{{ product.name }}</a></td>
+                <td>{{ product.seller_name }}</td>
+                <td>{{ format_money(product.price) }}</td>
+                <td><span class="status status-{{ product.status }}">{{ product.status }}</span></td>
+                <td>{{ product.report_count }}</td>
+                <td>
+                  <form action="/admin/products/{{ product.id }}/{{ 'delete' if product.status == 'active' else 'activate' }}" method="post" data-confirm="상품 상태를 변경할까요?">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button class="table-action" type="submit">{{ "삭제" if product.status == "active" else "복구" }}</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-section">
+      <div class="section-heading"><div><p class="eyebrow">MESSAGES</p><h2>채팅 관리</h2></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>유형</th><th>보낸 이웃</th><th>받는 이웃</th><th>내용</th><th>일시</th><th>조치</th></tr></thead>
+          <tbody>
+            {% for message in messages %}
+              <tr>
+                <td>{{ "전체" if message.recipient_id is none else "1:1" }}</td>
+                <td>{{ message.sender_name }}</td>
+                <td>{{ message.recipient_name or "전체 채팅" }}</td>
+                <td class="wide-cell">{{ message.body }}</td>
+                <td>{{ format_date(message.created_at) }}</td>
+                <td>
+                  <form action="/admin/messages/{{ message.id }}/delete" method="post" data-confirm="이 메시지를 삭제할까요?">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button class="table-action" type="submit">삭제</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}<tr><td colspan="6">메시지가 없습니다.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-section">
+      <div class="section-heading"><div><p class="eyebrow">TRANSFERS</p><h2>최근 송금 기록</h2></div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>보낸 이웃</th><th>받은 이웃</th><th>금액</th><th>메모</th><th>일시</th></tr></thead>
+          <tbody>
+            {% for item in transfers %}
+              <tr><td>{{ item.sender_name }}</td><td>{{ item.recipient_name }}</td><td>{{ format_money(item.amount) }}</td><td>{{ item.memo or "—" }}</td><td>{{ format_date(item.created_at) }}</td></tr>
+            {% else %}<tr><td colspan="5">송금 기록이 없습니다.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+{% endblock %}

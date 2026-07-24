@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% set editing = product is not none %}
+{% block title %}{{ "상품 수정" if editing else "새 상품 등록" }}{% endblock %}
+{% block content %}
+  <section class="page-shell narrow-shell">
+    <div class="page-heading">
+      <div>
+        <p class="eyebrow">{{ "EDIT AN ITEM" if editing else "PASS IT FORWARD" }}</p>
+        <h1>{{ "상품 정보 수정" if editing else "어떤 물건을 건네실 건가요?" }}</h1>
+        <p>물건의 상태가 잘 전달되도록 사진과 설명을 자세히 적어주세요.</p>
+      </div>
+      <a class="back-link" href="{{ '/products/' ~ product.id if editing else '/' }}">← 돌아가기</a>
+    </div>
+    <form
+      class="form-card product-form"
+      action="{{ '/products/' ~ product.id ~ '/edit' if editing else '/products/new' }}"
+      method="post"
+      enctype="multipart/form-data"
+    >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="image-upload">
+        <div class="image-preview" id="image-preview">
+          {% if editing and product.image_path %}
+            <img src="{{ product.image_path }}" alt="현재 상품 사진">
+          {% else %}
+            <span aria-hidden="true">＋</span>
+            <p>상품 사진</p>
+          {% endif %}
+        </div>
+        <div>
+          <label class="button button-ghost" for="image">사진 선택</label>
+          <input id="image" class="visually-hidden-input" name="image" type="file" accept="image/png,image/jpeg,image/webp" data-image-input {% if not editing %}required{% endif %}>
+          <p class="field-help">PNG, JPEG, WebP · 최대 4MB</p>
+        </div>
+      </div>
+      <div class="field">
+        <label for="name">상품명</label>
+        <input id="name" name="name" minlength="2" maxlength="80" value="{{ product.name if editing else '' }}" placeholder="예: 필름 카메라" required>
+      </div>
+      <div class="field">
+        <label for="price">가격</label>
+        <div class="money-input">
+          <input id="price" name="price" type="number" min="0" max="100000000" value="{{ product.price if editing else '' }}" placeholder="0" required>
+          <span>원</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="description">상품 설명</label>
+        <textarea id="description" name="description" minlength="10" maxlength="2000" rows="9" placeholder="구매 시기, 사용감, 하자 여부와 거래 방법을 알려주세요." required>{{ product.description if editing else '' }}</textarea>
+        <p class="field-help">10~2,000자</p>
+      </div>
+      <div class="form-actions">
+        <a class="button button-ghost" href="{{ '/products/' ~ product.id if editing else '/' }}">취소</a>
+        <button class="button button-primary" type="submit">{{ "수정 내용 저장" if editing else "상품 등록하기" }}</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

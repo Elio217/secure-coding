@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}신고하기{% endblock %}
+{% block content %}
+  <section class="page-shell narrow-shell">
+    <div class="form-card report-card">
+      <p class="eyebrow">REPORT WITH CARE</p>
+      <h1>신고하기</h1>
+      <p class="report-target">
+        신고 대상
+        <strong>{{ "사용자" if target_type == "user" else "상품" }} · {{ target.target_name }}</strong>
+      </p>
+      <div class="callout">
+        사실에 근거한 신고 사유를 구체적으로 작성해주세요.
+        같은 대상은 한 번만 신고할 수 있으며, 신고가 {{ report_threshold }}회 누적되면 자동으로 이용이 제한됩니다.
+      </div>
+      <form action="/reports/{{ target_type }}/{{ target_id }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="field">
+          <label for="reason">신고 사유</label>
+          <textarea id="reason" name="reason" minlength="10" maxlength="500" rows="8" placeholder="확인한 문제와 상황을 10자 이상 작성해주세요." required></textarea>
+          <p class="field-help">10~500자</p>
+        </div>
+        <div class="form-actions">
+          <button class="button button-danger" type="submit">신고 접수</button>
+          <a class="button button-ghost" href="{{ '/users/' ~ target_id if target_type == 'user' else '/products/' ~ target_id }}">취소</a>
+        </div>
+      </form>
+    </div>
+  </section>
+{% endblock %}

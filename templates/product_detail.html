@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block content %}
+  <section class="page-shell product-detail-shell">
+    <a class="back-link" href="/#market">← 상품 목록</a>
+    <div class="product-detail">
+      <div class="detail-image">
+        {% if product.image_path %}
+          <img src="{{ product.image_path }}" alt="{{ product.name }}">
+        {% else %}
+          <span class="image-placeholder large-placeholder" aria-hidden="true">되</span>
+        {% endif %}
+        {% if product.status != "active" %}<span class="status-ribbon">{{ product.status }}</span>{% endif %}
+      </div>
+      <div class="detail-copy">
+        <p class="eyebrow">SECOND SEASON ITEM</p>
+        <h1>{{ product.name }}</h1>
+        <p class="detail-price">{{ format_money(product.price) }}</p>
+        <div class="seller-card">
+          <div class="avatar avatar-large">{{ product.seller_name[:1] }}</div>
+          <div>
+            <small>판매하는 이웃</small>
+            <a href="/users/{{ product.seller_id }}">{{ product.seller_name }}</a>
+            <span>@{{ product.seller_username }}</span>
+          </div>
+        </div>
+        <div class="detail-description">
+          <h2>물건 이야기</h2>
+          <p>{{ product.description }}</p>
+        </div>
+        <p class="detail-date">등록 {{ format_date(product.created_at) }}</p>
+        {% if current_user %}
+          {% if current_user.id == product.seller_id %}
+            <div class="detail-actions">
+              <a class="button button-primary" href="/products/{{ product.id }}/edit">상품 수정</a>
+              <form action="/products/{{ product.id }}/delete" method="post" data-confirm="이 상품을 삭제할까요?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="button button-danger-ghost" type="submit">상품 삭제</button>
+              </form>
+            </div>
+          {% else %}
+            <div class="detail-actions">
+              <a class="button button-primary" href="/messages/{{ product.seller_id }}">판매자와 1:1 채팅</a>
+              <a class="button button-ghost" href="/transfers">송금하기</a>
+              <a class="report-link" href="/reports/product/{{ product.id }}">이 상품 신고</a>
+            </div>
+          {% endif %}
+        {% else %}
+          <a class="button button-primary button-wide" href="/login">로그인하고 거래하기</a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

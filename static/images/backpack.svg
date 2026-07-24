@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 650">
+  <rect width="800" height="650" fill="#d8d0bc"/>
+  <circle cx="150" cy="530" r="250" fill="#efc45a" opacity=".8"/>
+  <path d="M317 190c8-73 158-73 166 0" fill="none" stroke="#31462f" stroke-width="35" stroke-linecap="round"/>
+  <path d="M227 255c0-57 46-103 103-103h140c57 0 103 46 103 103v264c0 37-30 67-67 67H294c-37 0-67-30-67-67Z" fill="#526b4e"/>
+  <path d="M272 329h256v155c0 31-25 56-56 56H328c-31 0-56-25-56-56Z" fill="#31462f"/>
+  <path d="M330 389h140" stroke="#efc45a" stroke-width="16" stroke-linecap="round"/>
+  <path d="M227 302h346" stroke="#f5f1e7" stroke-width="8" opacity=".42"/>
+  <circle cx="400" cy="453" r="12" fill="#e66b3c"/>
+  <text x="400" y="625" text-anchor="middle" font-family="sans-serif" font-size="22" letter-spacing="8" fill="#526b4e">GO AGAIN</text>
+</svg>

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}되살림페이{% endblock %}
+{% block content %}
+  <section class="page-shell">
+    <div class="page-heading">
+      <div><p class="eyebrow">RESALIM PAY</p><h1>이웃에게 안전하게 송금하기</h1><p>보낸 사람과 받는 사람의 잔액을 하나의 거래로 처리합니다.</p></div>
+      <div class="balance-chip"><span>내 잔액</span><strong>{{ format_money(current_user.balance) }}</strong></div>
+    </div>
+    <div class="transfer-layout">
+      <section class="form-card">
+        <div class="form-card-heading"><p class="eyebrow">SEND</p><h2>송금하기</h2></div>
+        <form action="/transfers" method="post" data-confirm="입력한 금액을 이웃에게 송금할까요?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="transfer_token" value="{{ transfer_token }}">
+          <div class="field">
+            <label for="recipient_id">받는 이웃</label>
+            <select id="recipient_id" name="recipient_id" required>
+              <option value="">선택해주세요</option>
+              {% for user in recipients %}<option value="{{ user.id }}">{{ user.display_name }} (@{{ user.username }})</option>{% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="amount">보낼 금액</label>
+            <div class="money-input"><input id="amount" name="amount" type="number" min="1" max="10000000" placeholder="0" required><span>원</span></div>
+          </div>
+          <div class="field"><label for="memo">메모</label><input id="memo" name="memo" maxlength="100" placeholder="예: 필름 카메라 거래"></div>
+          <div class="field"><label for="password">송금 비밀번호 확인</label><input id="password" name="password" type="password" maxlength="128" autocomplete="current-password" required></div>
+          <button class="button button-primary button-wide" type="submit">송금하기</button>
+        </form>
+      </section>
+      <section class="history-panel">
+        <div class="form-card-heading"><p class="eyebrow">HISTORY</p><h2>최근 송금 내역</h2></div>
+        <div class="transaction-list">
+          {% for item in history %}
+            {% set outgoing = item.sender_id == current_user.id %}
+            <article>
+              <span class="transaction-icon {{ 'outgoing' if outgoing else 'incoming' }}">{{ "↗" if outgoing else "↙" }}</span>
+              <div>
+                <strong>{{ item.recipient_name if outgoing else item.sender_name }}</strong>
+                <p>{{ item.memo or ("보낸 송금" if outgoing else "받은 송금") }} · {{ format_date(item.created_at) }}</p>
+              </div>
+              <b class="{{ 'amount-out' if outgoing else 'amount-in' }}">{{ "−" if outgoing else "+" }}{{ format_money(item.amount) }}</b>
+            </article>
+          {% else %}
+            <div class="empty-state"><p>아직 송금 내역이 없습니다.</p></div>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+  </section>
+{% endblock %}

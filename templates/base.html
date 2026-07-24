@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta
+      name="description"
+      content="오래 쓰는 마음을 잇는 안전한 동네 중고거래 플랫폼, 되살림"
+    >
+    <title>{% block title %}되살림{% endblock %} · 동네 중고거래</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+    <header class="site-header">
+      <div class="nav-shell">
+        <a class="brand" href="/" aria-label="되살림 홈">
+          <span class="brand-mark" aria-hidden="true">되</span>
+          <span>
+            <strong>되살림</strong>
+            <small>두 번째 쓰임</small>
+          </span>
+        </a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+          <span></span><span></span><span></span>
+          <span class="sr-only">메뉴 열기</span>
+        </button>
+        <nav class="site-nav" id="site-nav" aria-label="주요 메뉴">
+          <a href="/#market" {% if current_path == "/" %}aria-current="page"{% endif %}>상품 둘러보기</a>
+          {% if current_user %}
+            <a href="/users" {% if current_path.startswith("/users") %}aria-current="page"{% endif %}>이웃 찾기</a>
+            <a href="/transfers" {% if current_path == "/transfers" %}aria-current="page"{% endif %}>되살림페이</a>
+            {% if current_user.role == "admin" %}
+              <a href="/admin" {% if current_path == "/admin" %}aria-current="page"{% endif %}>관리</a>
+            {% endif %}
+            <a class="nav-profile" href="/mypage">{{ current_user.display_name }}</a>
+            <form action="/logout" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button class="text-button" type="submit">로그아웃</button>
+            </form>
+          {% else %}
+            <a href="/login">로그인</a>
+            <a class="button button-small button-dark" href="/signup">시작하기</a>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+
+    {% if notice %}
+      <div class="notice" role="status">
+        <span aria-hidden="true">✓</span>
+        <p>{{ notice }}</p>
+      </div>
+    {% endif %}
+
+    <main id="main">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="/">
+          <span class="brand-mark" aria-hidden="true">되</span>
+          <span><strong>되살림</strong><small>오래 쓰는 마음을 잇습니다</small></span>
+        </a>
+        <p>안전한 거래를 위해 신고·차단·관리 기록을 운영합니다.</p>
+      </div>
+      <div class="footer-links">
+        <a href="/#market">상품</a>
+        {% if current_user %}
+          <a href="/users">이웃</a>
+          <a href="/transfers">송금</a>
+        {% else %}
+          <a href="/login">로그인</a>
+          <a href="/signup">회원가입</a>
+        {% endif %}
+      </div>
+      <p class="copyright">© 2026 되살림. Secure Coding Project.</p>
+    </footer>
+  </body>
+</html>

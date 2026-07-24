@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% set is_signup = mode == "signup" %}
+{% block title %}{{ "회원가입" if is_signup else "로그인" }}{% endblock %}
+{% block content %}
+  <section class="auth-shell">
+    <div class="auth-aside">
+      <p class="eyebrow">{{ "WELCOME, NEIGHBOR" if is_signup else "WELCOME BACK" }}</p>
+      <h1>{{ "좋은 물건의 다음을 함께해요." if is_signup else "다시 만나 반가워요." }}</h1>
+      <p>
+        {{ "가입하면 상품 등록, 채팅, 송금과 신고 기능을 이용할 수 있습니다." if is_signup
+           else "가입한 아이디와 비밀번호로 안전하게 로그인하세요." }}
+      </p>
+      <div class="auth-quote">
+        <span aria-hidden="true">“</span>
+        물건을 오래 쓰는 일은<br>가장 다정한 선택입니다.
+      </div>
+    </div>
+    <div class="form-card auth-card">
+      <div class="form-card-heading">
+        <p class="eyebrow">{{ "JOIN US" if is_signup else "SIGN IN" }}</p>
+        <h2>{{ "회원가입" if is_signup else "로그인" }}</h2>
+      </div>
+      {% if error %}<div class="form-error" role="alert">{{ error }}</div>{% endif %}
+      <form action="{{ '/signup' if is_signup else '/login' }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="field">
+          <label for="username">아이디</label>
+          <input
+            id="username"
+            name="username"
+            value="{{ values.username if values else '' }}"
+            minlength="3"
+            maxlength="20"
+            pattern="[a-z0-9_]+"
+            autocomplete="username"
+            placeholder="영문 소문자, 숫자, 밑줄"
+            required
+          >
+        </div>
+        {% if is_signup %}
+          <div class="field">
+            <label for="display_name">계정명</label>
+            <input
+              id="display_name"
+              name="display_name"
+              value="{{ values.display_name if values else '' }}"
+              minlength="2"
+              maxlength="30"
+              autocomplete="nickname"
+              placeholder="이웃에게 보일 이름"
+              required
+            >
+          </div>
+        {% endif %}
+        <div class="field">
+          <label for="password">비밀번호</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            minlength="10"
+            maxlength="128"
+            autocomplete="{{ 'new-password' if is_signup else 'current-password' }}"
+            placeholder="{{ '문자와 숫자를 포함해 10자 이상' if is_signup else '비밀번호 입력' }}"
+            required
+          >
+        </div>
+        {% if not is_signup %}
+          <div class="field">
+            <label for="otp_code">관리자 2차 인증코드 <small>(관리자만 입력)</small></label>
+            <input
+              id="otp_code"
+              name="otp_code"
+              inputmode="numeric"
+              pattern="[0-9]{6}"
+              maxlength="6"
+              autocomplete="one-time-code"
+              placeholder="6자리 인증코드"
+            >
+          </div>
+        {% endif %}
+        {% if is_signup %}
+          <div class="field">
+            <label for="password_confirm">비밀번호 확인</label>
+            <input
+              id="password_confirm"
+              name="password_confirm"
+              type="password"
+              minlength="10"
+              maxlength="128"
+              autocomplete="new-password"
+              placeholder="비밀번호를 한 번 더 입력"
+              required
+            >
+          </div>
+        {% endif %}
+        <button class="button button-primary button-wide" type="submit">
+          {{ "가입하고 시작하기" if is_signup else "로그인" }}
+        </button>
+      </form>
+      <p class="form-switch">
+        {{ "이미 계정이 있나요?" if is_signup else "아직 계정이 없나요?" }}
+        <a href="{{ '/login' if is_signup else '/signup' }}">{{ "로그인" if is_signup else "회원가입" }}</a>
+      </p>
+    </div>
+  </section>
+{% endblock %}

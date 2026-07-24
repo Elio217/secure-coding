@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ profile.display_name }}{% endblock %}
+{% block content %}
+  <section class="page-shell">
+    <a class="back-link" href="/users">← 이웃 목록</a>
+    <div class="profile-hero">
+      <div class="avatar profile-avatar">{{ profile.display_name[:1] }}</div>
+      <div>
+        <p class="eyebrow">NEIGHBOR PROFILE</p>
+        <h1>{{ profile.display_name }}</h1>
+        <p class="username">@{{ profile.username }}</p>
+        <p class="profile-bio">{{ profile.bio or "아직 소개글이 없습니다." }}</p>
+        <small>{{ format_date(profile.created_at) }}부터 함께하는 중</small>
+      </div>
+      {% if profile.id != current_user.id %}
+        <div class="profile-actions">
+          <a class="button button-primary" href="/messages/{{ profile.id }}">1:1 채팅</a>
+          <a class="button button-ghost" href="/reports/user/{{ profile.id }}">사용자 신고</a>
+        </div>
+      {% else %}
+        <a class="button button-ghost" href="/mypage">내 정보 수정</a>
+      {% endif %}
+    </div>
+    <div class="section-heading">
+      <div><p class="eyebrow">LISTINGS</p><h2>{{ profile.display_name }}님의 물건</h2></div>
+    </div>
+    {% if products %}
+      <div class="product-grid">
+        {% for product in products %}
+          <article class="product-card">
+            <a class="product-image" href="/products/{{ product.id }}">
+              {% if product.image_path %}<img src="{{ product.image_path }}" alt="{{ product.name }}">{% else %}<span class="image-placeholder">되</span>{% endif %}
+            </a>
+            <div class="product-card-body">
+              <h3><a href="/products/{{ product.id }}">{{ product.name }}</a></h3>
+              <div class="product-meta"><strong>{{ format_money(product.price) }}</strong></div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state"><p>현재 거래 중인 상품이 없습니다.</p></div>
+    {% endif %}
+  </section>
+{% endblock %}

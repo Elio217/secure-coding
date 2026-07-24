@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 650">
+  <rect width="800" height="650" fill="#e8dcc8"/>
+  <path d="M0 515C155 455 272 565 422 510s258-22 378 38v102H0Z" fill="#c7d4bd"/>
+  <ellipse cx="400" cy="226" rx="220" ry="68" fill="#a7633f"/>
+  <path d="M199 226v45c0 42 90 74 201 74s201-32 201-74v-45c-30 38-107 63-201 63s-171-25-201-63Z" fill="#7d472e"/>
+  <path d="M262 321 220 560M538 321l42 239" stroke="#6d3b28" stroke-width="38" stroke-linecap="round"/>
+  <path d="M250 475h300" stroke="#7d472e" stroke-width="28" stroke-linecap="round"/>
+  <text x="400" y="610" text-anchor="middle" font-family="sans-serif" font-size="22" letter-spacing="8" fill="#526b4e">MADE TO LAST</text>
+</svg>

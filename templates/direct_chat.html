@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ other.display_name }}님과 채팅{% endblock %}
+{% block content %}
+  <section class="page-shell narrow-shell">
+    <div class="chat-page-header">
+      <a class="back-link" href="/users">← 이웃 목록</a>
+      <div class="chat-person">
+        <div class="avatar">{{ other.display_name[:1] }}</div>
+        <div><h1>{{ other.display_name }}</h1><span>@{{ other.username }}</span></div>
+      </div>
+      <a class="report-link" href="/reports/user/{{ other.id }}">사용자 신고</a>
+    </div>
+    <div class="direct-chat">
+      <div class="direct-messages">
+        {% for message in messages %}
+          <article class="{{ 'mine' if message.sender_id == current_user.id else 'theirs' }}">
+            <small>{{ message.sender_name }}</small>
+            <p>{{ message.body }}</p>
+            <time>{{ format_date(message.created_at) }}</time>
+          </article>
+        {% else %}
+          <div class="empty-state"><p>첫 메시지를 보내 거래 이야기를 시작해 보세요.</p></div>
+        {% endfor %}
+      </div>
+      <form class="direct-compose" action="/messages/{{ other.id }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label class="sr-only" for="direct-message">1대1 메시지</label>
+        <textarea id="direct-message" name="body" maxlength="500" rows="2" placeholder="메시지를 입력하세요" required></textarea>
+        <button class="button button-primary" type="submit">보내기</button>
+      </form>
+    </div>
+  </section>
+{% endblock %}

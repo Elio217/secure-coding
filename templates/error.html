@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ error_title }}{% endblock %}
+{% block content %}
+  <section class="error-page">
+    <p class="error-code">{{ status }}</p>
+    <h1>{{ error_title }}</h1>
+    <p>{{ error_message }}</p>
+    <a class="button button-primary" href="/">홈으로 돌아가기</a>
+  </section>
+{% endblock %}

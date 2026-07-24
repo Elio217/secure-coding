@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}이웃 찾기{% endblock %}
+{% block content %}
+  <section class="page-shell">
+    <div class="page-heading split-heading">
+      <div>
+        <p class="eyebrow">FIND A NEIGHBOR</p>
+        <h1>함께하는 이웃</h1>
+        <p>아이디나 계정명으로 거래 상대를 찾아보세요.</p>
+      </div>
+      <form class="compact-search" action="/users" method="get" role="search">
+        <label class="sr-only" for="user-search">사용자 검색</label>
+        <input id="user-search" type="search" name="q" value="{{ search }}" maxlength="50" placeholder="아이디 또는 계정명">
+        <button type="submit">찾기</button>
+      </form>
+    </div>
+    <div class="user-grid">
+      {% for user in users %}
+        <article class="user-card">
+          <div class="avatar avatar-xl">{{ user.display_name[:1] }}</div>
+          <div>
+            <h2><a href="/users/{{ user.id }}">{{ user.display_name }}</a></h2>
+            <p class="username">@{{ user.username }}</p>
+            <p>{{ user.bio or "아직 소개글이 없습니다." }}</p>
+          </div>
+          {% if user.id != current_user.id %}
+            <a class="arrow-link" href="/messages/{{ user.id }}">1:1 채팅 →</a>
+          {% else %}
+            <span class="self-label">나</span>
+          {% endif %}
+        </article>
+      {% else %}
+        <div class="empty-state full-span"><h3>일치하는 이웃이 없습니다</h3><p>다른 검색어를 사용해 보세요.</p></div>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

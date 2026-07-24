@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 650">
+  <rect width="800" height="650" fill="#d9ddcf"/>
+  <circle cx="650" cy="110" r="210" fill="#efc45a" opacity=".88"/>
+  <rect x="145" y="205" width="510" height="300" rx="48" fill="#28372e"/>
+  <rect x="225" y="165" width="145" height="75" rx="20" fill="#28372e"/>
+  <circle cx="400" cy="352" r="125" fill="#f4efe4"/>
+  <circle cx="400" cy="352" r="94" fill="#526b4e"/>
+  <circle cx="400" cy="352" r="53" fill="#17231d"/>
+  <circle cx="430" cy="322" r="16" fill="#fffdf7" opacity=".7"/>
+  <circle cx="580" cy="268" r="22" fill="#e66b3c"/>
+  <text x="400" y="570" text-anchor="middle" font-family="sans-serif" font-size="22" letter-spacing="8" fill="#526b4e">SECOND SEASON</text>
+</svg>

@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}되살림{% endblock %}
+{% block content %}
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">동네의 물건에 두 번째 계절을</p>
+      <h1>잘 쓰인 물건은<br><em>다시, 잘 쓰일 수 있으니까.</em></h1>
+      <p class="hero-description">
+        가까운 이웃과 물건의 이야기를 나누고, 안심하고 거래하세요.
+        필요한 것은 오래 쓰고, 필요 없는 것은 좋은 다음 주인에게.
+      </p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#market">물건 둘러보기</a>
+        {% if current_user %}
+          <a class="button button-ghost" href="/products/new">내 물건 내놓기</a>
+        {% else %}
+          <a class="button button-ghost" href="/signup">동네 이웃 되기</a>
+        {% endif %}
+      </div>
+      <dl class="hero-stats">
+        <div><dt>{{ counts.products }}</dt><dd>거래 중인 물건</dd></div>
+        <div><dt>{{ counts.users }}</dt><dd>함께하는 이웃</dd></div>
+        <div><dt>{{ counts.transfers }}</dt><dd>안전한 송금</dd></div>
+      </dl>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="sun-disc"></div>
+      <div class="art-card art-card-one">
+        <span class="art-label">SECOND<br>SEASON</span>
+        <span class="art-object">♧</span>
+      </div>
+      <div class="art-card art-card-two">
+        <span class="art-number">02</span>
+        <span>좋은 물건<br>좋은 다음</span>
+      </div>
+      <div class="art-stamp">동네에서<br>다시 쓰기</div>
+    </div>
+  </section>
+
+  <section class="market-section" id="market">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">NEARBY FINDS</p>
+        <h2>오늘의 되살림</h2>
+        <p>누군가 아껴 쓴 물건을 발견해 보세요.</p>
+      </div>
+      {% if current_user %}
+        <a class="button button-dark" href="/products/new">＋ 상품 등록</a>
+      {% endif %}
+    </div>
+
+    <form class="search-bar" action="/" method="get" role="search">
+      <label class="sr-only" for="product-search">상품 검색</label>
+      <span aria-hidden="true">⌕</span>
+      <input
+        id="product-search"
+        name="q"
+        type="search"
+        maxlength="80"
+        value="{{ search }}"
+        placeholder="찾고 있는 물건을 검색해 보세요"
+      >
+      <button type="submit">검색</button>
+    </form>
+
+    {% if search %}
+      <div class="result-summary">
+        <strong>‘{{ search }}’</strong> 검색 결과 {{ products|length }}개
+        <a href="/#market">검색 지우기</a>
+      </div>
+    {% endif %}
+
+    {% if products %}
+      <div class="product-grid">
+        {% for product in products %}
+          <article class="product-card">
+            <a class="product-image" href="/products/{{ product.id }}" aria-label="{{ product.name }} 상세 보기">
+              {% if product.image_path %}
+                <img src="{{ product.image_path }}" alt="{{ product.name }}">
+              {% else %}
+                <span class="image-placeholder" aria-hidden="true">되</span>
+              {% endif %}
+              <span class="card-badge">다시 쓰기</span>
+            </a>
+            <div class="product-card-body">
+              <p class="product-seller">
+                <a href="/users/{{ product.seller_id }}">{{ product.seller_name }}</a>
+              </p>
+              <h3><a href="/products/{{ product.id }}">{{ product.name }}</a></h3>
+              <div class="product-meta">
+                <strong>{{ format_money(product.price) }}</strong>
+                <time datetime="{{ product.created_at }}">{{ format_date(product.created_at) }}</time>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <span aria-hidden="true">⌕</span>
+        <h3>아직 맞는 물건이 없어요</h3>
+        <p>다른 검색어를 사용하거나 첫 상품을 등록해 보세요.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="community-section">
+    <div class="community-copy">
+      <p class="eyebrow">NEIGHBORHOOD CHAT</p>
+      <h2>거래 전에,<br>먼저 이야기를 나눠요.</h2>
+      <p>
+        모든 이웃이 함께 쓰는 실시간 대화방입니다.
+        개인적인 거래 이야기는 판매자의 1:1 채팅을 이용해 주세요.
+      </p>
+      {% if not current_user %}
+        <a class="button button-light" href="/login">로그인하고 참여하기</a>
+      {% endif %}
+    </div>
+    <div
+      class="chat-panel"
+      id="global-chat"
+      data-last-id="{{ messages[-1].id if messages else 0 }}"
+      data-can-stream="{{ 'true' if current_user else 'false' }}"
+    >
+      <div class="chat-header">
+        <div><span class="live-dot"></span><strong>동네 전체 채팅</strong></div>
+        <small>실시간</small>
+      </div>
+      <div class="chat-messages" id="chat-messages" aria-live="polite">
+        {% for message in messages %}
+          <article class="chat-message" data-message-id="{{ message.id }}">
+            <div class="avatar">{{ message.display_name[:1] }}</div>
+            <div>
+              <p><strong>{{ message.display_name }}</strong><time>{{ format_date(message.created_at) }}</time></p>
+              <span>{{ message.body }}</span>
+            </div>
+          </article>
+        {% else %}
+          <p class="chat-empty" id="chat-empty">첫 인사를 건네 보세요.</p>
+        {% endfor %}
+      </div>
+      {% if current_user %}
+        <form class="chat-compose" id="global-chat-form" action="/api/chat/global" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <label class="sr-only" for="global-message">전체 채팅 메시지</label>
+          <input id="global-message" name="body" maxlength="500" placeholder="이웃에게 메시지 보내기" required>
+          <button type="submit" aria-label="메시지 전송">→</button>
+        </form>
+        <p class="form-feedback" id="chat-feedback" role="status"></p>
+      {% else %}
+        <div class="chat-locked">메시지를 보내려면 로그인이 필요합니다.</div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="principles">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">TRUST BY DESIGN</p>
+        <h2>거래의 기본을 지킵니다</h2>
+      </div>
+    </div>
+    <div class="principle-grid">
+      <article><span>01</span><h3>사람을 확인하고</h3><p>프로필과 1:1 대화로 거래 상대를 먼저 알아보세요.</p></article>
+      <article><span>02</span><h3>기록을 남기고</h3><p>송금과 신고 내역을 분명하게 남겨 거래를 확인합니다.</p></article>
+      <article><span>03</span><h3>문제를 차단하고</h3><p>누적 신고된 상품과 사용자는 자동으로 이용이 제한됩니다.</p></article>
+    </div>
+  </section>
+{% endblock %}
