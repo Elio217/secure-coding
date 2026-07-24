@@ -1,154 +1,170 @@
-# Tiny Market
+# 되살림 — Tiny Second-hand Shopping Platform
 
-보안을 설계 단계부터 반영한 교육용 소규모 중고거래 플랫폼입니다. 회원, 상품, 채팅, 신고·차단, 가상 포인트 송금, 관리자 통합 관리라는 과제의 최소 요구사항을 모두 구현했습니다.
-
-> 이 저장소의 송금 기능은 실제 금융 기능이 아닌 교육용 가상 포인트 원장입니다.
+되살림은 물건을 등록·검색하고, 이웃과 채팅하고, 신고·송금할 수 있는 중고거래 웹 플랫폼입니다. `secure-coding-slide.v2.pdf`의 최소 요구사항과 25~28페이지의 시스템 설계를 기준으로 구현했습니다.
 
 ## 구현 기능
 
-| 요구사항 | 구현 |
-|---|---|
-| 가입·로그인·프로필 | 중복 없는 아이디, scrypt 비밀번호 해시, 소개글·비밀번호 수정 |
-| 상품 등록·조회 | 상품명·설명·가격·이미지, 판매 상태, 본인 상품 수정·삭제 |
-| 상품 검색 | 상품명·설명 검색, SQL 와일드카드 이스케이프 |
-| 사용자 소통 | 3초 폴링 기반 전체 채팅과 1:1 채팅 |
-| 악성 대상 차단 | 개인 사용자 차단, 사용자·상품 신고, 3인 신고 시 자동 차단, 관리자 재검토 |
-| 사용자 간 송금 | 가상 포인트, 비밀번호 재확인, 원자적 잔액 변경, 중복 요청 방지, 원장 보존 |
-| 관리자 전체 관리 | 사용자·상품·신고·메시지 관리, 송금 원장과 감사 로그 조회 |
+| 요구사항 | 구현 내용 |
+| --- | --- |
+| 사용자 관리 | 회원가입, 로그인, 사용자 조회, 프로필, 소개글·비밀번호 변경, 아이디 중복 방지 |
+| 상품 관리 | 사진 업로드, 등록·수정·삭제, 전체 조회, 상세 페이지, 내 상품 관리, 검색 |
+| 사용자 소통 | Server-Sent Events 기반 실시간 전체 채팅, 1대1 채팅 |
+| 신고 및 차단 | 사용자·상품 신고, 중복 신고 방지, 사유 기록, 3회 누적 시 상품 차단·사용자 휴면 |
+| 송금 | 가상 잔액 조회, 사용자 간 송금, 송금 기록, 잔액 부족·동시성 검증 |
+| 관리자 | 사용자 휴면·복구, 상품 삭제·복구, 신고 처리, 채팅 삭제, 송금 기록 조회 |
+| 데이터베이스 | 사용자, 상품, 신고, 채팅, 송금, 세션, 감사 로그를 SQLite로 관리 |
 
-## 기술 구성
+## 실행 환경
 
-- Python 3.11 이상
-- Flask 3.1 계열
+- Python 3.12
+- Jinja2 3.1 이상
 - SQLite 3
-- Jinja 템플릿과 순수 JavaScript/CSS
-- Pillow 기반 안전한 이미지 재인코딩
-- pytest, Bandit, pip-audit
+- 최신 Chrome, Edge, Firefox 또는 Safari
 
-SQLite를 사용해 별도 데이터베이스 서버 없이 평가 환경에서 바로 실행할 수 있습니다. 모든 SQL 값은 파라미터로 바인딩하며, 데이터베이스 제약조건과 애플리케이션 검증을 함께 사용합니다.
+Node.js나 별도의 데이터베이스 서버는 필요하지 않습니다.
 
-## 환경 설정 및 실행
+## 설치 및 실행
 
-Ubuntu/WSL 기준입니다.
+Ubuntu 또는 WSL 터미널에서 저장소 폴더로 이동한 후 실행합니다.
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-python -m flask --app app init-db
-python -m flask --app app create-admin
-python -m flask --app app run
+python3 -m pip install -r requirements.txt
 ```
 
-브라우저에서 `http://127.0.0.1:5000`에 접속합니다. 일반 회원은 가입 시 교육용 포인트 100,000원을 받습니다. 관리자 계정은 기본 비밀번호를 제공하지 않으며 `create-admin` 명령에서 직접 안전한 비밀번호를 설정합니다.
-
-데이터베이스와 업로드 파일은 기본적으로 `instance/`에 저장되고 Git에서 제외됩니다. 개발 환경에서는 `instance/secret_key`가 최초 실행 시 안전한 난수로 생성됩니다.
-
-### 환경변수
-
-| 변수 | 기본값 | 설명 |
-|---|---|---|
-| `APP_ENV` | `development` | `production`이면 HTTPS 전용 쿠키와 HSTS 활성화 |
-| `SECRET_KEY` | 개발 시 로컬 난수 파일 | 운영에서는 32자 이상의 난수 필수 |
-| `DATABASE` | `instance/marketplace.sqlite3` | SQLite 파일 경로 |
-| `UPLOAD_FOLDER` | `instance/uploads` | 재인코딩된 이미지 저장 경로 |
-
-운영 설정 예시는 다음과 같습니다. `.env.example`은 참고용이며, 셸에 직접 로드해야 합니다.
+관리자 비밀번호를 환경 변수로 지정하고 서버를 실행합니다.
 
 ```bash
-cp .env.example .env
-# .env의 SECRET_KEY를 안전한 난수로 변경
-set -a
-source .env
-set +a
-python -m flask --app app run
+export ADMIN_PASSWORD='충분히-긴-관리자-비밀번호'
+python3 app.py --seed
 ```
 
-운영 배포에서는 Flask 개발 서버를 외부에 노출하지 말고, TLS가 설정된 리버스 프록시 뒤의 WSGI 서버를 사용해야 합니다.
+브라우저에서 <http://127.0.0.1:8000>으로 접속합니다.
 
-## 테스트와 보안 점검
+- `--seed`는 화면 확인용 사용자·상품·채팅을 한 번만 추가합니다.
+- 데모 사용자 아이디는 `demo_seller`, `demo_buyer`이고 비밀번호는 `DemoMarket2026!`입니다.
+- `--seed`를 사용하지 않으면 데모 계정과 상품을 생성하지 않습니다.
+- `ADMIN_PASSWORD`를 생략하면 안전한 임의 비밀번호를 생성해 최초 실행 시 터미널에 한 번 출력합니다.
 
-개발 의존성을 설치한 뒤 실행합니다.
+### 주요 실행 옵션
 
 ```bash
-pip install -r requirements-dev.txt
-pytest -q
-bandit -r marketplace app.py
-pip-audit -r requirements.txt
+python3 app.py --help
+python3 app.py --host 0.0.0.0 --port 8080
+python3 app.py --init-only
 ```
 
-2026-07-22 기준 결과:
+## 테스트
 
-- pytest: 20 passed
-- Bandit: Low/Medium/High 이슈 0건, `# nosec` 예외 0건
-- pip-audit: 알려진 취약점 0건
+전체 단위·통합 테스트를 실행합니다.
 
-검증 범위는 [보안 체크리스트](docs/SECURITY_CHECKLIST.md)에 정리했습니다.
+```bash
+python3 -m unittest discover -s tests -v
+```
 
-## 주요 보안 통제
+테스트에는 다음 항목이 포함됩니다.
 
-- scrypt와 사용자별 난수 salt를 적용하고 평문 비밀번호를 저장하거나 기록하지 않습니다.
-- 모든 상태 변경 요청에 세션 기반 CSRF 토큰을 검증합니다.
-- 로그인 후 세션과 CSRF 토큰을 회전하고 `HttpOnly`, `SameSite=Lax`, 운영 `Secure` 쿠키를 사용합니다.
-- 모든 SQL 값을 `?` 파라미터로 바인딩하며 검색 와일드카드도 이스케이프합니다.
-- 객체 소유권과 관리자 역할을 서버에서 매 요청 검사해 IDOR를 차단합니다.
-- Jinja 자동 이스케이프와 `textContent`, CSP를 함께 사용해 XSS를 방어합니다.
-- 업로드 파일은 크기·픽셀 수·실제 이미지 형식을 확인하고 서버에서 재인코딩한 뒤 UUID 이름으로 저장합니다. SVG는 허용하지 않습니다.
-- 송금은 `BEGIN IMMEDIATE`, 조건부 잔액 차감, 재인증, 요청별 nonce와 원장을 사용합니다.
-- 로그인·회원가입·메시지·신고·송금에는 SQLite 기반 속도 제한을 적용합니다.
-- 관리자 변경과 중요 사용자 행위를 감사 로그에 기록합니다.
+- 비밀번호 해시 및 정책
+- 아이디 형식 검증과 요청 횟수 제한
+- 데이터베이스 제약조건과 초기화 멱등성
+- 회원가입 → 상품 등록 → 송금 → 전체 채팅 → 신고 흐름
+- 서로 다른 사용자 3명의 신고 누적에 따른 상품 자동 차단
+- CSRF 검증과 미인증 사용자의 상품 삭제 차단
+- 보안 응답 헤더
+- 관리자 접근과 채팅 관리
+
+## 환경 변수
+
+| 이름 | 기본값 | 설명 |
+| --- | --- | --- |
+| `ADMIN_USERNAME` | `admin` | 최초 관리자 아이디 |
+| `ADMIN_PASSWORD` | 임의 생성 | 최초 관리자 비밀번호. 12자 이상 권장 |
+| `MARKET_DB_PATH` | `instance/market.db` | SQLite 데이터베이스 경로 |
+| `MARKET_UPLOAD_DIR` | `instance/uploads` | 상품 이미지 저장 경로 |
+| `HOST` | `127.0.0.1` | 서버 바인딩 주소 |
+| `PORT` | `8000` | 서버 포트 |
+| `SEED_DEMO_DATA` | `0` | `1`이면 데모 데이터 생성 |
+| `COOKIE_SECURE` | `0` | HTTPS 운영 환경에서는 `1`로 설정 |
+
+## 데이터베이스 설계
+
+```text
+users ──< products
+  │
+  ├──< messages >── users
+  ├──< reports
+  ├──< transfers >─ users
+  ├──< sessions
+  └──< audit_logs
+```
+
+- `users`: 아이디, 계정명, 비밀번호 해시, 소개글, 역할, 상태, 가상 잔액
+- `products`: 상품명, 설명, 가격, 사진 경로, 판매자, 상태, 신고 횟수
+- `messages`: 발신자, 수신자(전체 채팅은 `NULL`), 본문
+- `reports`: 신고자, 대상 유형, 대상 아이디, 사유, 처리 상태
+- `transfers`: 보낸 사용자, 받은 사용자, 금액, 메모
+- `sessions`: 해시 처리된 세션 토큰과 만료 시각
+- `audit_logs`: 관리자 조치 및 중요 변경 이력
+
+## 보안 설계
+
+- 비밀번호는 무작위 salt를 사용한 `scrypt` 해시로만 저장합니다.
+- 세션 원문은 쿠키에만 두고 데이터베이스에는 SHA-256 해시를 저장합니다.
+- 세션 쿠키에 `HttpOnly`, `SameSite=Lax`를 적용하고 운영 HTTPS에서는 `Secure`를 적용할 수 있습니다.
+- 모든 상태 변경 요청에 예측 불가능한 CSRF 토큰을 검증합니다.
+- Jinja2 자동 이스케이프와 클라이언트 `textContent`를 사용해 사용자 입력을 출력합니다.
+- 모든 SQL 값은 매개변수 바인딩을 사용합니다.
+- 상품 수정·삭제, 관리자 조치, 1대1 채팅에 서버 측 권한 검사를 적용합니다.
+- 로그인과 메시지 전송에 요청 횟수 제한을 적용합니다.
+- 이미지 크기와 파일 시그니처를 검증하고 PNG, JPEG, WebP만 허용합니다.
+- 송금은 `BEGIN IMMEDIATE` 트랜잭션과 조건부 잔액 차감으로 처리합니다.
+- 중복 신고를 데이터베이스 `UNIQUE` 제약조건으로 막습니다.
+- 사용자 휴면 시 기존 로그인 세션을 모두 삭제합니다.
+- CSP, 클릭재킹 방지, MIME 스니핑 방지 등 보안 응답 헤더를 전송합니다.
+- 중요한 사용자·상품·송금·관리 작업은 감사 로그에 남깁니다.
+
+## 요구사항 결정 사항
+
+PDF 안에서 구체적으로 정해지지 않았거나 서로 다른 부분은 다음과 같이 설계했습니다.
+
+- 상품 목록에는 상품명뿐 아니라 별도로 요구된 가격과 사진도 함께 표시합니다.
+- 상품 사진은 데이터베이스에 파일 자체가 아닌 안전하게 생성한 파일 경로로 저장합니다.
+- 신고 대상은 `target_type`과 `target_id` 조합으로 사용자와 상품을 구분합니다.
+- 상품과 사용자의 자동 이용 제한 기준은 서로 다른 사용자의 신고 3회로 정했습니다.
+- 실제 결제 시스템 대신 과제 시연용 가상 잔액을 사용하며 신규 사용자는 100,000원을 받습니다.
+- 관리자 화면은 사용자·상품·신고·채팅을 관리하고 송금 내역을 조회할 수 있습니다.
 
 ## 프로젝트 구조
 
 ```text
-app.py                       Flask 진입점
-marketplace/
-  __init__.py                설정, 보안 헤더, 오류 처리, CLI
-  auth.py                    인증과 프로필
-  market.py                  상품, 채팅, 신고·차단, 송금
-  admin.py                   관리자 RBAC와 관리 기능
-  db.py / schema.sql         DB 연결과 스키마
-  security.py                해시, CSRF, 검증, 업로드, 속도 제한
-  templates/ / static/       화면과 안전한 폴링 코드
-tests/                       기능·보안 자동화 테스트 20개
-docs/                        보고서 원본과 보안 체크리스트
-scripts/generate_report.py   제출 형식 PDF 생성기
+.
+├── app.py                      # HTTP 서버, 라우팅, 권한 및 입력 검증
+├── marketplace/
+│   ├── db.py                   # 스키마, 초기화, 데모 데이터, 감사 로그
+│   └── security.py             # 비밀번호, 토큰, 입력 정책, 요청 제한
+├── templates/                  # Jinja2 화면 템플릿
+├── static/                     # CSS, JavaScript, 로컬 SVG
+├── instance/
+│   └── uploads/                # 업로드 이미지(버전 관리 제외)
+├── tests/                      # 단위 및 HTTP 통합 테스트
+├── REQUIREMENTS_CHECKLIST.md   # 과제 요구사항 체크리스트
+└── requirements.txt
 ```
 
-## 보고서 생성
+## 운영 및 유지보수 시 주의사항
 
-아래 값은 본인 정보와 실제 공개 저장소 주소로 입력합니다. 결과 파일명에는 공백이 들어가지 않습니다.
+현재 구현은 과제 시연과 단일 서버 실행을 위한 버전입니다.
 
-```bash
-python scripts/generate_report.py \
-  --class-number 01 \
-  --name 홍길동 \
-  --phone-last4 1234 \
-  --github-url https://github.com/your-id/secure-coding
-```
+- 인터넷에 공개할 때는 HTTPS 역방향 프록시 뒤에서 실행하고 `COOKIE_SECURE=1`을 설정해야 합니다.
+- `--seed`로 만든 데모 계정은 공개 운영 환경에서 사용하지 않습니다.
+- `instance/market.db`와 `instance/uploads`를 함께 정기 백업해야 합니다.
+- 여러 서버 인스턴스로 확장할 때는 SQLite·로컬 업로드·메모리 기반 요청 제한을 외부 데이터베이스와 공용 저장소로 교체해야 합니다.
+- 되살림페이는 실제 금융 결제가 아닌 과제 시연용 가상 송금입니다.
 
-생성 파일: `[WHS][secure-coding][01반]홍길동(1234).pdf`
+## GitHub 제출 전 확인
 
-## GitHub 공개 저장소 게시
-
-강의 자료의 절차에 따라 GitHub 인증 후 다음과 같이 게시할 수 있습니다. 원본 강의 PDF, 로컬 DB, 비밀키, 업로드 파일은 `.gitignore`로 제외됩니다.
-
-```bash
-git init
-git add .
-git commit -m "Implement secure Tiny Market"
-gh auth login
-gh repo create secure-coding --public --source=. --remote=origin --push
-```
-
-게시 후 실제 저장소 URL을 사용해 보고서를 다시 생성하고, 저장소 공개 여부와 README 화면을 로그아웃 상태에서 확인합니다.
-
-## 알려진 한계와 유지보수
-
-- 채팅은 단일 서버에 적합한 3초 폴링 방식입니다. 대규모 환경에서는 WebSocket과 메시지 브로커가 필요합니다.
-- SQLite와 로컬 업로드는 단일 인스턴스용입니다. 확장 시 PostgreSQL과 객체 저장소로 이전해야 합니다.
-- 3인 자동 차단은 빠른 피해 억제를 위한 교육용 정책입니다. 다중 계정 악용에 대비해 운영에서는 계정 신뢰도와 관리자 검토를 결합해야 합니다.
-- 실제 금융 기능으로 확장하려면 전자금융 규정, 강한 사용자 인증, 이중 원장, 정산·환불·분쟁 처리가 별도로 필요합니다.
-
-자세한 개발 과정, 위협 모델, 수정한 보안 약점, 테스트 결과와 유지보수 계획은 [보고서 원본](docs/REPORT.md)에 있습니다.
+1. 본인 GitHub에 공개 저장소를 생성합니다.
+2. 이 프로젝트를 업로드합니다.
+3. 실제 저장소 주소를 최종 PDF 보고서에 포함합니다.
+4. `ADMIN_PASSWORD`, 데이터베이스, 업로드 파일 등 운영 데이터가 커밋되지 않았는지 확인합니다.
